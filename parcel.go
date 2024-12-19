@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 type ParcelStore struct {
@@ -64,7 +65,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client",
 		sql.Named("client", client))
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 	defer rows.Close()
 
@@ -72,11 +73,14 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		var p Parcel
 		err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			return nil, err
+			log.Fatal(err)
 		}
 		res = append(res, p)
 	}
-
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return res, nil
 
 }
@@ -114,7 +118,7 @@ func (s ParcelStore) Delete(number int) error {
 	// удалять строку можно только если значение статуса registered
 
 	_, err := s.db.Exec(
-		"DELETE parcel WHERE number = :number AND status = :status",
+		"DELETE FROM parcel WHERE number = :number AND status = :status",
 		sql.Named("number", number),
 		sql.Named("status", ParcelStatusRegistered),
 	)

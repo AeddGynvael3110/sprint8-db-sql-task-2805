@@ -50,10 +50,10 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, id, storedParcel.Number)
 	require.Equal(t, parcel.Client, storedParcel.Client)
 	require.Equal(t, parcel.Status, storedParcel.Status)
 	require.Equal(t, parcel.Address, storedParcel.Address)
+	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -70,9 +70,7 @@ func TestSetAddress(t *testing.T) {
 	// prepare
 	// настройте подключение к БД
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -178,9 +176,9 @@ func TestGetByClient(t *testing.T) {
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		require.Contains(t, parcelMap, parcel.Number)
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.Contains(t, parcelMap, parcel.Number)
 		require.Equal(t, parcelMap[parcel.Number].Client, parcel.Client)
 		require.Equal(t, parcelMap[parcel.Number].Status, parcel.Status)
 		require.Equal(t, parcelMap[parcel.Number].Address, parcel.Address)
+		require.Equal(t, parcelMap[parcel.Number].CreatedAt, parcel.CreatedAt)
 	}
 }
