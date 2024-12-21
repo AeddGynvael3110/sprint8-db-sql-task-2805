@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 )
 
 type ParcelStore struct {
@@ -65,7 +64,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client",
 		sql.Named("client", client))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -73,13 +72,13 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		var p Parcel
 		err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		res = append(res, p)
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	return res, nil
 
@@ -92,7 +91,7 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 		sql.Named("number", number),
 	)
 	if err != nil {
-		return fmt.Errorf("oшибка выполнения запроса: %v", err)
+		return fmt.Errorf("oшибка выполнения запроса: %w", err)
 	}
 	return nil
 }
@@ -107,7 +106,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 		sql.Named("status", ParcelStatusRegistered),
 	)
 	if err != nil {
-		return fmt.Errorf("oшибка выполнения запроса: %v", err)
+		return fmt.Errorf("oшибка выполнения запроса: %w", err)
 	}
 
 	return nil
@@ -123,7 +122,7 @@ func (s ParcelStore) Delete(number int) error {
 		sql.Named("status", ParcelStatusRegistered),
 	)
 	if err != nil {
-		return fmt.Errorf("ошибка выполнения запроса: %v", err)
+		return fmt.Errorf("ошибка выполнения запроса: %w", err)
 	}
 
 	return nil
