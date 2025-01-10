@@ -94,7 +94,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
 	res, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number AND status = 'registered'",
-		sql.Named("addresss", address),
+		sql.Named("address", address),
 		sql.Named("number", number))
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	res, err := s.db.Exec("DELETE FROM parcel, WHERE number = :number AND status = 'registered'",
+	res, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = 'registered'",
 		sql.Named("number", number))
 	if err != nil {
 		return err
