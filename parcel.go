@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 )
 
 type ParcelStore struct {
@@ -13,48 +14,139 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 }
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
-	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
+	// Добавление объект Parcel в таблицу tracker.db.parcel
+	res, errExec := s.db.Exec(`
+INSERT INTO parcel(client,
+                   status,
+                   address,
+                   created_at)
+    VALUES(:client,
+           :status,
+           :addr,
+           :date);`,
+		sql.Named("client", p.Client),
+		sql.Named("status", p.Status),
+		sql.Named("addr", p.Address),
+		sql.Named("date", p.CreatedAt))
 
-	// верните идентификатор последней добавленной записи
-	return 0, nil
+	if errExec != nil {
+		return 0, errExec
+	}
+
+	id, errID := res.LastInsertId()
+	if errID != nil {
+		return 0, errID
+	}
+
+	return int(id), nil
 }
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
-	// реализуйте чтение строки по заданному number
-	// здесь из таблицы должна вернуться только одна строка
+	// Возвращаем объект из таблицы tracker.db.parcel
+	// tracker.db.parcel.number равный number
+	row := s.db.QueryRow(`
+SELECT number,
+       client,
+       status,
+       address,
+       created_at
+FROM parcel
+WHERE number = :num;`,
+		sql.Named("num", number))
 
 	// заполните объект Parcel данными из таблицы
 	p := Parcel{}
+	err := row.Scan(
+		&p.Number,
+		&p.Client,
+		&p.Status,
+		&p.Address,
+		&p.CreatedAt)
 
-	return p, nil
+	return p, err
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
-	// реализуйте чтение строк из таблицы parcel по заданному client
-	// здесь из таблицы может вернуться несколько строк
+	//  Чтение строк из таблицы parcel по заданному client
+	rows, err := s.db.Query(`
+SELECT number,
+       client,
+       status,
+       address,
+       created_at
+FROM parcel
+WHERE client=:client;`,
+		sql.Named("client", client))
 
-	// заполните срез Parcel данными из таблицы
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			log.Printf("sql.Rows error - %v", err)
+		}
+	}()
+
 	var res []Parcel
+
+	for rows.Next() {
+		p := Parcel{}
+
+		errScan := rows.Scan(
+			&p.Number,
+			&p.Client,
+			&p.Status,
+			&p.Address,
+			&p.CreatedAt,
+		)
+
+		if errScan != nil {
+			return nil, errScan
+		}
+
+		res = append(res, p)
+	}
 
 	return res, nil
 }
 
 func (s ParcelStore) SetStatus(number int, status string) error {
-	// реализуйте обновление статуса в таблице parcel
+	// Oбновление статуса в таблице parcel
+	_, err := s.db.Exec(`
+UPDATE parcel
+SET status = :status
+WHERE number = :num;`,
+		sql.Named("num", number),
+		sql.Named("status", status))
 
-	return nil
+	return err
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	// реализуйте обновление адреса в таблице parcel
+	// Обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
+	_, err := s.db.Exec(`
+UPDATE parcel
+SET address = :addr
+WHERE number = :num AND 
+      status = :reg;`,
+		sql.Named("addr", address),
+		sql.Named("num", number),
+		sql.Named("reg", ParcelStatusRegistered))
 
-	return nil
+	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
-	// реализуйте удаление строки из таблицы parcel
+	// Удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
+	_, err := s.db.Exec(`
+DELETE FROM parcel
+WHERE number = :num AND
+      status = :reg;`,
+		sql.Named("num", number),
+		sql.Named("reg", ParcelStatusRegistered))
 
-	return nil
+	return err
 }
