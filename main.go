@@ -105,6 +105,7 @@ func main() {
 		fmt.Printf("Не удалось подключиться к базе данных: %s\n", err)
 	}
 	defer db.Close()
+
 	store := NewParcelStore(db)
 	service := NewParcelService(store)
 

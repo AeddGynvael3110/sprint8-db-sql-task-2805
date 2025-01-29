@@ -33,7 +33,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	// реализуйте чтение строки по заданному number
 	// здесь из таблицы должна вернуться только одна строка
-	queryString := "select number, client, status, address, created_at from parcel where number = $1"
+	queryString := "SELECT number, client, status, address, created_at FROM parcel WHERE number = $1"
 	respRow := s.db.QueryRow(queryString, number)
 
 	// заполните объект Parcel данными из таблицы
@@ -52,7 +52,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
-	queryString := "select number, client, status, address, created_at from parcel where client = $1"
+	queryString := "SELECT number, client, status, address, created_at FROM parcel WHERE client = $1"
 	respRows, err := s.db.Query(queryString, client)
 	if err != nil {
 		return res, fmt.Errorf("возникла ошибка при получении строк по заданному клиенту: %w", err)
@@ -78,7 +78,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 func (s ParcelStore) SetStatus(number int, status string) error {
 	// реализуйте обновление статуса в таблице parcel
 
-	queryString := "update parcel set status = $1 where number = $2"
+	queryString := "UPDATE parcel SET status = $1 WHERE number = $2"
 	_, err := s.db.Exec(queryString, status, number)
 	if err != nil {
 		return fmt.Errorf("возникла ошибка при обновлении статуса посылки: %w", err)
@@ -91,8 +91,8 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
 
-	queryString := "update parcel set address = $1 where number = $2 and status = 'registered'"
-	_, err := s.db.Exec(queryString, address, number)
+	queryString := "UPDATE parcel SET address = $1 WHERE number = $2 AND status = $3"
+	_, err := s.db.Exec(queryString, address, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("возникла ошибка при обновлении адреса: %w", err)
 	}
@@ -104,8 +104,8 @@ func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
 
-	queryString := "delete from parcel where number = $1 and status = 'registered'"
-	_, err := s.db.Exec(queryString, number)
+	queryString := "delete FROM parcel WHERE number = $1 AND status = $2"
+	_, err := s.db.Exec(queryString, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("возникла ошибка при удалении строки: %w", err)
 	}
