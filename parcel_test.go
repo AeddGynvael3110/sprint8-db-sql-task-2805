@@ -55,21 +55,28 @@ func TestAddGetDelete(t *testing.T) {
 }
 
 // TestSetAddress проверяет обновление адреса
-// func TestSetAddress(t *testing.T) {
-// 	// prepare
-// // 	db, err := // настройте подключение к БД
-//
-// 	// add
-// 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
-//
-// 	// set address
-// 	// обновите адрес, убедитесь в отсутствии ошибки
-// 	newAddress := "new test address"
-//
-// 	// check
-// 	// получите добавленную посылку и убедитесь, что адрес обновился
-// }
-//
+func TestSetAddress(t *testing.T) {
+	// prepare
+	db, err := sql.Open("sqlite", "tracker.db")
+    store := NewParcelStore(db)
+    parcel := getTestParcel()
+
+	// add
+	id, err := store.Add(parcel)
+    require.NoError(t, err)
+    assert.GreaterOrEqual(t, id, 0)
+
+	// set address
+	newAddress := "new test address"
+	err = store.SetAddress(id, newAddress)
+	require.NoError(t, err)
+
+	// check
+	p, err := store.Get(id)
+    require.NoError(t, err)
+    assert.Equal(t, p.Address, newAddress)
+}
+
 // // TestSetStatus проверяет обновление статуса
 // func TestSetStatus(t *testing.T) {
 // 	// prepare
