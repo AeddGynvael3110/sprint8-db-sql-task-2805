@@ -149,9 +149,9 @@ func TestGetByClient(t *testing.T) {
 
 	// check
 	for _, parcel := range storedParcels {
-		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
-		// убедитесь, что все посылки из storedParcels есть в parcelMap
-		// убедитесь, что значения полей полученных посылок заполнены верно
+		assert.In(t, parcel, storedParcels)
+		assert.Equal(t, parcel, parcelMap[parcel.Number])
+
 		err = store.Delete(parcel.Number)
         require.NoError(t, err)
 	}
