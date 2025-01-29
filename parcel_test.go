@@ -40,6 +40,7 @@ func TestAddGetDelete(t *testing.T) {
 	id, err := store.Add(parcel)
     require.NoError(t, err)
     assert.GreaterOrEqual(t, id, 0)
+    parcel.Number = id;
 
 	// get
     p, err := store.Get(id)
@@ -144,7 +145,7 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	assert.Equal(t, len(parcels), storedParcels)
+	assert.Equal(t, len(parcels), len(storedParcels))
 
 	// check
 	for _, parcel := range storedParcels {
