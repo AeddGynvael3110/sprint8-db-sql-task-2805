@@ -130,7 +130,7 @@ func TestGetByClient(t *testing.T) {
 	// add
 	id := 0
 	for i := 0; i < len(parcels); i++ {
-        id, err = store.Add(parcel)
+        id, err = store.Add(parcels[i])
         require.NoError(t, err)
         assert.GreaterOrEqual(t, id, 0)
 
@@ -147,9 +147,11 @@ func TestGetByClient(t *testing.T) {
 	assert.Equal(t, len(parcels), storedParcels)
 
 	// check
-// 	for _, parcel := range storedParcels {
-// 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
-// 		// убедитесь, что все посылки из storedParcels есть в parcelMap
-// 		// убедитесь, что значения полей полученных посылок заполнены верно
-// 	}
+	for _, parcel := range storedParcels {
+		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
+		// убедитесь, что все посылки из storedParcels есть в parcelMap
+		// убедитесь, что значения полей полученных посылок заполнены верно
+		err = store.Delete(parcel.Number)
+        require.NoError(t, err)
+	}
 }
