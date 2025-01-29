@@ -48,7 +48,18 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
-
+    rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM parcel WHERE client = %s", client))
+    if err != nil {
+        return res, err
+    }
+    for rows.Next() {
+        p := Parcel{}
+        err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
+        if err != nil {
+            return res, err
+        }
+        res = append(res, p)
+    }
 	return res, nil
 }
 
