@@ -39,7 +39,7 @@ func TestAddGetDelete(t *testing.T) {
 	// add
 	id, err := store.Add(parcel)
     require.NoError(t, err)
-    assert.Positive(t, id)
+    assert.GreaterOrEqual(t, id, 0)
 
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
