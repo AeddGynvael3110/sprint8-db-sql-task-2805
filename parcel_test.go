@@ -75,23 +75,39 @@ func TestSetAddress(t *testing.T) {
 	p, err := store.Get(id)
     require.NoError(t, err)
     assert.Equal(t, p.Address, newAddress)
+
+	// delete
+	err = store.Delete(id)
+    require.NoError(t, err)
 }
 
-// // TestSetStatus проверяет обновление статуса
-// func TestSetStatus(t *testing.T) {
-// 	// prepare
-// // 	db, err := // настройте подключение к БД
-//
-// 	// add
-// 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
-//
-// 	// set status
-// 	// обновите статус, убедитесь в отсутствии ошибки
-//
-// 	// check
-// 	// получите добавленную посылку и убедитесь, что статус обновился
-// }
-//
+// TestSetStatus проверяет обновление статуса
+func TestSetStatus(t *testing.T) {
+	// prepare
+	db, err := sql.Open("sqlite", "tracker.db")
+    store := NewParcelStore(db)
+    parcel := getTestParcel()
+
+	// add
+	id, err := store.Add(parcel)
+    require.NoError(t, err)
+    assert.GreaterOrEqual(t, id, 0)
+
+	// set status
+	newStatus := ParcelStatusSent
+	err = store.SetStatus(id, newStatus)
+	require.NoError(t, err)
+
+	// check
+	p, err := store.Get(id)
+    require.NoError(t, err)
+    assert.Equal(t, p.Status, newStatus)
+
+	// delete
+	err = store.Delete(id)
+    require.NoError(t, err)
+}
+
 // // TestGetByClient проверяет получение посылок по идентификатору клиента
 // func TestGetByClient(t *testing.T) {
 // 	// prepare
