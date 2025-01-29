@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type ParcelStore struct {
@@ -19,7 +20,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
         sql.Named("status", p.Status),
         sql.Named("address", p.Address),
         sql.Named("created_at", p.CreatedAt))
-    if (err != nil) {
+    if err != nil {
         return 0, err
     }
     last, _ := res.LastInsertId()
@@ -27,12 +28,17 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 }
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
-	// реализуйте чтение строки по заданному number
-	// здесь из таблицы должна вернуться только одна строка
-
-	// заполните объект Parcel данными из таблицы
+    rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM parcel WHERE number = %s", number))
 	p := Parcel{}
-
+	if err != nil {
+        return p, err
+    }
+    for rows.Next() {
+        err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
+        if err != nil {
+            return p, err
+        }
+    }
 	return p, nil
 }
 
