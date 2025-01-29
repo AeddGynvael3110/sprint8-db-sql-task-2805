@@ -149,7 +149,6 @@ func TestGetByClient(t *testing.T) {
 
 	// check
 	for _, parcel := range storedParcels {
-		assert.In(t, parcel, storedParcels)
 		assert.Equal(t, parcel, parcelMap[parcel.Number])
 
 		err = store.Delete(parcel.Number)
