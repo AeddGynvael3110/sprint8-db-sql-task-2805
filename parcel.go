@@ -28,7 +28,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 }
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
-    rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM parcel WHERE number = %s", number))
+    rows, err := s.db.Query(fmt.Sprintf("SELECT * FROM parcel WHERE number = %d", number))
 	p := Parcel{}
 	if err != nil {
         return p, err
