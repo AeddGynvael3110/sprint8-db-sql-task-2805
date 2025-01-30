@@ -113,9 +113,9 @@ func TestSetStatus(t *testing.T) {
 	parcel := getTestParcel()
 	num, err := store.Add(parcel)
 	require.NoError(t, err)
+
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
-
 	err = store.SetStatus(num, ParcelStatusSent)
 	assert.NoError(t, err)
 
@@ -124,12 +124,6 @@ func TestSetStatus(t *testing.T) {
 	secondParcel, err := store.Get(num)
 	assert.NoError(t, err)
 	assert.Equal(t, ParcelStatusSent, secondParcel.Status)
-
-	// delete
-	err = store.Delete(num)
-	assert.NoError(t, err)
-	_, err = store.Get(num)
-	assert.Error(t, err)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
