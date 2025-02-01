@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -34,10 +33,8 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	require.NoError(t, err)
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -55,11 +52,7 @@ func TestAddGetDelete(t *testing.T) {
 	recievedParcel, err := store.Get(number)
 
 	require.NoError(t, err)
-	//assert.Equal(t, parcel.Number, recievedParcel.Number)
-	assert.Equal(t, parcel.Client, recievedParcel.Client)
-	assert.Equal(t, parcel.Status, recievedParcel.Status)
-	assert.Equal(t, parcel.Address, recievedParcel.Address)
-	assert.Equal(t, parcel.CreatedAt, recievedParcel.CreatedAt)
+	assert.Equal(t, parcel, recievedParcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -68,8 +61,9 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	recievedParcel, err = store.Get(number)
+
 	require.Error(t, err)
-	//assert.Nil(t, recievedParcel)
+	assert.Nil(t, recievedParcel)
 
 }
 
@@ -77,10 +71,8 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	require.NoError(t, err)
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -113,10 +105,8 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	require.NoError(t, err)
 	defer db.Close()
 
 	// add
@@ -151,10 +141,8 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	require.NoError(t, err)
 	defer db.Close()
 
 	parcels := []Parcel{
@@ -205,10 +193,7 @@ func TestGetByClient(t *testing.T) {
 		assert.True(t, exists) // убедитесь, что полученная посылка есть в parcelMap
 
 		// убеждаемся, что значения полей полученных посылок заполнены верно
-		assert.Equal(t, originalParcel.Client, parcel.Client)
-		assert.Equal(t, originalParcel.Status, parcel.Status) // Замените SomeField на соответствующее поле вашего Parcel
-		assert.Equal(t, originalParcel.Address, parcel.Address)
-		assert.Equal(t, originalParcel.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, originalParcel, parcel)
 
 	}
 }

@@ -102,23 +102,13 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number", sql.Named("number", number)).Scan(&status)
+	_, err := s.db.Exec("UPDATE parcel SET address = ? WHERE number = ? AND status = ?", address, number, "registered")
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("parcel not found")
-		}
 		return err
 	}
-
-	if status != "registered" {
-		return errors.New("cannot update address: parcel status is not registered")
-	}
-
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = :number",
-		sql.Named("address", address),
-		sql.Named("number", number))
 	return err
+
 }
 
 func (s ParcelStore) Delete(number int) error {
