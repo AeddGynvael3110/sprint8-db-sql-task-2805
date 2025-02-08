@@ -86,17 +86,8 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	var status string
-
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
-	if err != nil {
-		return fmt.Errorf("Ошибка SetAddress(): запрос SELECT status FROM parcel WHERE number = ? не удался: %w", err)
-	}
-	if status != ParcelStatusRegistered {
-		return fmt.Errorf("Ошибка SetAddress(): Значение статуса не равно registered")
-	}
-
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = ?", address, number)
+	_, err := s.db.Exec("UPDATE parcel SET address = ? WHERE number = ? AND status = ?",
+		address, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("Ошибка SetAddress(): обновление адреса: %w", err)
 	}
@@ -107,17 +98,8 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	var status string
 
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
-	if err != nil {
-		return fmt.Errorf("Ошибка Delete(): запрос SELECT status FROM parcel WHERE number = ? не удался: %w", err)
-	}
-	if status != ParcelStatusRegistered {
-		return fmt.Errorf("Ошибка Delete(): Значение статуса: status - %s != ParcelStatusRegistered - %s", status, ParcelStatusRegistered)
-	}
-
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = ?", number)
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = ? AND status = ?", number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("Ошибка Delete():Не удалось DELETE FROM parcel WHERE number = %d: %w", number, err)
 	}

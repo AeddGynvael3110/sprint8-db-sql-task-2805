@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
 	"time"
@@ -47,8 +48,8 @@ func TestAddGetDelete(t *testing.T) {
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	retrievedParcel, err := store.Get(parcel.Number)
-	require.NoError(t, err, "Ошибка при получении посылки из базы данных")
-	require.Equal(t, parcel, retrievedParcel, "Полученные данные не совпадают с исходными")
+	assert.NoError(t, err, "Ошибка при получении посылки из базы данных")
+	assert.Equal(t, parcel, retrievedParcel, "Полученные данные не совпадают с исходными")
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -86,8 +87,8 @@ func TestSetAddress(t *testing.T) {
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	updatedParcel, err := store.Get(parcel.Number)
-	require.NoError(t, err, "Ошибка при получении обновленной посылки из базы данных")
-	require.Equal(t, newAddress, updatedParcel.Address, "Адрес не был обновлен")
+	assert.NoError(t, err, "Ошибка при получении обновленной посылки из базы данных")
+	assert.Equal(t, newAddress, updatedParcel.Address, "Адрес не был обновлен")
 
 }
 
@@ -118,8 +119,8 @@ func TestSetStatus(t *testing.T) {
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	updatedParcel, err := store.Get(parcel.Number)
-	require.NoError(t, err, "Ошибка при получении обновленной посылки из базы данных")
-	require.Equal(t, newStatus, updatedParcel.Status, "Статус не был обновлен")
+	assert.NoError(t, err, "Ошибка при получении обновленной посылки из базы данных")
+	assert.Equal(t, newStatus, updatedParcel.Status, "Статус не был обновлен")
 
 }
 
@@ -160,8 +161,8 @@ func TestGetByClient(t *testing.T) {
 
 	// get by client
 	storedParcels, err := store.GetByClient(client)
-	require.NoError(t, err, "Ошибка при получении посылок по идентификатору клиента")
-	require.Len(t, storedParcels, len(parcels), "Количество полученных посылок не совпадает с количеством добавленных")
+	assert.NoError(t, err, "Ошибка при получении посылок по идентификатору клиента")
+	assert.Len(t, storedParcels, len(parcels), "Количество полученных посылок не совпадает с количеством добавленных")
 
 	// убедитесь в отсутствии ошибки
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
@@ -169,10 +170,10 @@ func TestGetByClient(t *testing.T) {
 	// check
 	for _, parcel := range storedParcels {
 		expectedParcel, exists := parcelMap[parcel.Number]
-		require.True(t, exists, "Посылка не найдена в карте по идентификатору")
+		assert.True(t, exists, "Посылка не найдена в карте по идентификатору")
 
 		// убедитесь, что все поля у посылки совпадают
-		require.Equal(t, expectedParcel.Client, parcel.Client, "Идентификатор клиента не совпадает")
+		assert.Equal(t, expectedParcel.Client, parcel.Client, "Идентификатор клиента не совпадает")
 		require.Equal(t, expectedParcel.Status, parcel.Status, "Статус не совпадает")
 		require.Equal(t, expectedParcel.Address, parcel.Address, "Адрес не совпадает")
 		require.Equal(t, expectedParcel.CreatedAt, parcel.CreatedAt, "Дата создания не совпадает")
