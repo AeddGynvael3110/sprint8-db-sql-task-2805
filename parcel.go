@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 )
 
 type ParcelStore struct {
@@ -39,7 +38,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 
 	err := res.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return Parcel{}, fmt.Errorf("Ошибка Get(): Заполние объекта Parcel данными из таблицы: %w", err)
+		return Parcel{}, err
 	}
 
 	return p, nil
@@ -50,7 +49,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// здесь из таблицы может вернуться несколько строк
 	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = ?", client)
 	if err != nil {
-		return nil, fmt.Errorf("Ошибка GetByClient(): Реализуйте чтение строк из таблицы parcel по заданному client: %w", err)
+		return nil, err
 	}
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
@@ -61,13 +60,13 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		p := Parcel{}
 		err = rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			return res, fmt.Errorf("Ошибка GetByClient(): Заполние среза Parcel данными из таблицы: %w", err)
+			return res, err
 		}
 		res = append(res, p)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("Ошибка GetByClient(): ошибка при обработке строк: %w", err)
+		return nil, err
 	}
 
 	return res, nil
@@ -77,7 +76,7 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	// реализуйте обновление статуса в таблице parcel
 	_, err := s.db.Exec("UPDATE parcel SET status = ? WHERE number = ?", status, number)
 	if err != nil {
-		return fmt.Errorf("Ошибка SetStatus(): реализуйте обновление статуса в таблице parcel: %w", err)
+		return err
 	}
 
 	return nil
@@ -88,7 +87,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	// менять адрес можно только если значение статуса registered
 	_, err := s.db.Exec("UPDATE parcel SET address = ? WHERE number = ? AND status = ?", address, number, ParcelStatusRegistered)
 	if err != nil {
-		return fmt.Errorf("Ошибка SetAddress(): обновление адреса: %w", err)
+		return err
 	}
 
 	return nil
@@ -100,7 +99,7 @@ func (s ParcelStore) Delete(number int) error {
 
 	_, err := s.db.Exec("DELETE FROM parcel WHERE number = ? AND status = ?", number, ParcelStatusRegistered)
 	if err != nil {
-		return fmt.Errorf("Ошибка Delete():Не удалось DELETE FROM parcel WHERE number = %d: %w", number, err)
+		return err
 	}
 
 	return nil
