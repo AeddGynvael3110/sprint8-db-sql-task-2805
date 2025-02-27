@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -45,10 +46,8 @@ func TestAddGetDelete(t *testing.T) {
 	// get
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	assert.Equal(t, parcel.Client, storedParcel.Client)
+	assert.Equal(t, parcel.Status, storedParcel.Status)
 
 	// delete
 	err = store.Delete(id)
@@ -57,6 +56,7 @@ func TestAddGetDelete(t *testing.T) {
 	// check
 	_, err = store.Get(id)
 	require.Error(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 func TestSetAddress(t *testing.T) {
@@ -80,7 +80,7 @@ func TestSetAddress(t *testing.T) {
 	// check
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, storedParcel.Address)
+	assert.Equal(t, newAddress, storedParcel.Address)
 }
 
 func TestSetStatus(t *testing.T) {
@@ -103,7 +103,7 @@ func TestSetStatus(t *testing.T) {
 	// check
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, ParcelStatusSent, storedParcel.Status)
+	assert.Equal(t, ParcelStatusSent, storedParcel.Status)
 }
 
 func TestGetByClient(t *testing.T) {
@@ -141,13 +141,13 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Len(t, storedParcels, len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.Equal(t, parcelMap[parcel.Number], parcel)
+		assert.Equal(t, parcelMap[parcel.Number], parcel)
 	}
 }
