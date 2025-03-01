@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	//test
 	_ "modernc.org/sqlite"
 )
 
@@ -98,8 +99,15 @@ func (s ParcelService) Delete(number int) error {
 
 func main() {
 	// настройте подключение к БД
+	db, err := sql.Open("sqlite", "./tracker.db")
+	if err != nil {
+		fmt.Println("Ошибка при открытии БД:", err)
+		return
+	}
+	defer db.Close()
 
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	// создайте объект ParcelStore функцией NewParcelStore
+	store := NewParcelStore(db)
 	service := NewParcelService(store)
 
 	// регистрация посылки
