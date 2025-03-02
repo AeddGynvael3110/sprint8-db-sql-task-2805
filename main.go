@@ -43,7 +43,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 		return parcel, err
 	}
 
-	parcel.Number = id
+	parcel.Number = int(id)
 
 	fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
 		parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)

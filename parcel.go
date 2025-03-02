@@ -1,4 +1,4 @@
-package godbsqlfinal
+package main
 
 import (
 	"database/sql"
@@ -12,13 +12,13 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 	return ParcelStore{db: db}
 }
 
-func (s ParcelStore) Add(p Parcel) (int, error) {
+func (s ParcelStore) Add(p Parcel) (int64, error) {
 	// реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
-	res, err := s.db.Exec("INSERT INTO parcel (client, status, address, createdAt) VALUES (:client, :status, :address, :createdAt)",
+	res, err := s.db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :created_at)",
 		sql.Named("client", p.Client),
 		sql.Named("status", p.Status),
 		sql.Named("address", p.Address),
-		sql.Named("createdAt", p.CreatedAt))
+		sql.Named("created_at", p.CreatedAt))
 	if err != nil {
 		return 0, err
 	}
@@ -30,8 +30,6 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 	}
 	// верните идентификатор последней добавленной записи
 
-	defer s.db.Close()
-
 	return id, nil
 
 }
@@ -42,15 +40,13 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 
 	p := Parcel{}
 
-	row := s.db.QueryRow("SELECT number, client, status, address, createdAt FROM parcel WHERE number = :number", sql.Named("number", number))
+	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
 		return p, err
 	}
 
 	// заполните объект Parcel данными из таблицы
-
-	defer s.db.Close()
 
 	return p, nil
 }
@@ -62,7 +58,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	// заполните срез Parcel данными из таблицы
 	var res []Parcel
 
-	rows, err := s.db.Query("SELECT number, client, status, address, createdAt FROM parcel WHERE client = :client", sql.Named("client", client))
+	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client", sql.Named("client", client))
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +74,9 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		res = append(res, parcel)
 	}
 
-	defer s.db.Close()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return res, nil
 }
@@ -93,8 +91,6 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	if err != nil {
 		return err
 	}
-
-	defer s.db.Close()
 
 	return nil
 }
@@ -125,8 +121,6 @@ func (s ParcelStore) Delete(number int) error {
 	if err != nil {
 		return err
 	}
-
-	defer s.db.Close()
 
 	return nil
 }
