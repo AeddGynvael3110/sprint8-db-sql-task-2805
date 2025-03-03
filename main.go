@@ -52,8 +52,7 @@ func (s ParcelService) Register(client int, address string) (Parcel, error) {
 }
 
 func (s ParcelService) PrintClientParcels(client int) error {
-	clientStr := fmt.Sprintf("%d", client) // Преобразуем int в string
-	parcels, err := s.store.GetByClient(clientStr)
+	parcels, err := s.store.GetByClient(client)
 	if err != nil {
 		return err
 	}

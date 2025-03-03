@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -110,7 +110,7 @@ func TestSetStatus(t *testing.T) {
 	require.NotZero(t, id)
 
 	// Обновление статуса
-	newStatus := "delivered"
+	newStatus := ParcelStatusDelivered
 	err = store.SetStatus(id, newStatus)
 	require.NoError(t, err)
 
@@ -150,15 +150,15 @@ func TestGetByClient(t *testing.T) {
 	}
 
 	// Получение по клиенту
-	storedParcels, err := store.GetByClient(fmt.Sprintf("%d", client))
+	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Equal(t, len(parcels), len(storedParcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	// Проверка
 	for _, parcel := range storedParcels {
 		expectedParcel, exists := parcelMap[parcel.Number]
-		require.True(t, exists)
-		require.Equal(t, expectedParcel.Client, parcel.Client)
+		assert.True(t, exists)
+		assert.Equal(t, expectedParcel, parcel)
 		require.Equal(t, expectedParcel.Status, parcel.Status)
 		require.Equal(t, expectedParcel.Address, parcel.Address)
 		require.Equal(t, expectedParcel.CreatedAt, parcel.CreatedAt)
