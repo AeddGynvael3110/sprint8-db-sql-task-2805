@@ -29,7 +29,7 @@ func getTestParcel() Parcel {
 // setupDB настраивает базу данных для тестов
 func setupDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("sqlite3", ":memory:")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	_, err = db.Exec(`
         CREATE TABLE parsel (

@@ -76,36 +76,45 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	query := "UPDATE parsel SET address = ? WHERE number = ?"
-	_, err := s.db.Exec(query, address, number)
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-
-func (s ParcelStore) Delete(number int) error {
-	// реализуйте удаление строки из таблицы parcel
-	// удалять строку можно только если значение статуса registered
+	// Проверяем статус посылки
 	var status string
 	err := s.db.QueryRow("SELECT status FROM parsel WHERE number = ?", number).Scan(&status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("parcel with number %d not found", number)
+			return fmt.Errorf("посылка с номером %d не найдена", number)
+		}
+		return fmt.Errorf("ошибка при получении статуса посылки: %w", err)
+	}
+
+	// Проверяем, что статус равен ParcelStatusRegistered
+	if status != ParcelStatusRegistered {
+		return fmt.Errorf("нельзя изменить адрес: статус посылки должен быть %s, текущий статус: %s", ParcelStatusRegistered, status)
+	}
+
+	// Обновляем адрес
+	query := "UPDATE parsel SET address = ? WHERE number = ?"
+	_, err = s.db.Exec(query, address, number)
+	if err != nil {
+		return fmt.Errorf("ошибка при обновлении адреса: %w", err)
+	}
+
+	return nil
+}
+
+func (s ParcelStore) Delete(number int) error {
+	var status string
+	err := s.db.QueryRow(`
+		DELETE FROM parsel 
+		WHERE number = ? AND status = ? 
+		RETURNING status
+	`, number, ParcelStatusRegistered).Scan(&status)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("посылка с номером %d не найдена или её нельзя удалить", number)
 		}
 		return err
 	}
 
-	// Удаляем запись только если статус "registered"
-	if status == "registered" {
-		_, err := s.db.Exec("DELETE FROM parsel WHERE number = ?", number)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// Возвращаем ошибку, если статус не "registered"
-	return fmt.Errorf("parcel with number %d cannot be deleted because its status is %s", number, status)
+	return nil
 }
