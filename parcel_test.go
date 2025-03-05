@@ -32,15 +32,15 @@ func setupDB(t *testing.T) *sql.DB {
 	assert.NoError(t, err)
 
 	_, err = db.Exec(`
-        CREATE TABLE parsel (
-            number INTEGER PRIMARY KEY AUTOINCREMENT,
-            client INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            address TEXT NOT NULL,
-            created_at TEXT NOT NULL
-        );
-    `)
-	require.NoError(t, err)
+    CREATE TABLE parsel (
+        number INTEGER PRIMARY KEY AUTOINCREMENT,
+        client INTEGER NOT NULL,
+        status TEXT NOT NULL,
+        address TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    );
+`)
+	require.NoError(t, err) // Теперь err уже определена выше
 
 	return db
 }
@@ -159,8 +159,6 @@ func TestGetByClient(t *testing.T) {
 		expectedParcel, exists := parcelMap[parcel.Number]
 		assert.True(t, exists)
 		assert.Equal(t, expectedParcel, parcel)
-		require.Equal(t, expectedParcel.Status, parcel.Status)
-		require.Equal(t, expectedParcel.Address, parcel.Address)
-		require.Equal(t, expectedParcel.CreatedAt, parcel.CreatedAt)
+
 	}
 }

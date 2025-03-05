@@ -76,26 +76,30 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	// Проверяем статус посылки
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parsel WHERE number = ?", number).Scan(&status)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("посылка с номером %d не найдена", number)
-		}
-		return fmt.Errorf("ошибка при получении статуса посылки: %w", err)
-	}
-
-	// Проверяем, что статус равен ParcelStatusRegistered
-	if status != ParcelStatusRegistered {
-		return fmt.Errorf("нельзя изменить адрес: статус посылки должен быть %s, текущий статус: %s", ParcelStatusRegistered, status)
-	}
-
-	// Обновляем адрес
-	query := "UPDATE parsel SET address = ? WHERE number = ?"
-	_, err = s.db.Exec(query, address, number)
+	// Обновляем адрес только если статус равен ParcelStatusRegistered
+	query := "UPDATE parsel SET address = ? WHERE number = ? AND status = ?"
+	result, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("ошибка при обновлении адреса: %w", err)
+	}
+
+	// Проверяем, была ли обновлена хотя бы одна строка
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("ошибка при проверке обновлённых строк: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		// Если ни одна строка не была обновлена, значит, либо посылка не найдена, либо статус не соответствует
+		var status string
+		err := s.db.QueryRow("SELECT status FROM parsel WHERE number = ?", number).Scan(&status)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return fmt.Errorf("посылка с номером %d не найдена", number)
+			}
+			return fmt.Errorf("ошибка при получении статуса посылки: %w", err)
+		}
+		return fmt.Errorf("нельзя изменить адрес: статус посылки должен быть %s, текущий статус: %s", ParcelStatusRegistered, status)
 	}
 
 	return nil
@@ -110,10 +114,7 @@ func (s ParcelStore) Delete(number int) error {
 	`, number, ParcelStatusRegistered).Scan(&status)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return fmt.Errorf("посылка с номером %d не найдена или её нельзя удалить", number)
-		}
-		return err
+		return fmt.Errorf("не удалось удалить посылку с номером %d: %w", number, err)
 	}
 
 	return nil
