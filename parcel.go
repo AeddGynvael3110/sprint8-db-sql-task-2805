@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 )
 
@@ -78,29 +77,14 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// Обновляем адрес только если статус равен ParcelStatusRegistered
 	query := "UPDATE parsel SET address = ? WHERE number = ? AND status = ?"
-	result, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
+	_, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("ошибка при обновлении адреса: %w", err)
 	}
 
 	// Проверяем, была ли обновлена хотя бы одна строка
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("ошибка при проверке обновлённых строк: %w", err)
-	}
 
-	if rowsAffected == 0 {
-		// Если ни одна строка не была обновлена, значит, либо посылка не найдена, либо статус не соответствует
-		var status string
-		err := s.db.QueryRow("SELECT status FROM parsel WHERE number = ?", number).Scan(&status)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				return fmt.Errorf("посылка с номером %d не найдена", number)
-			}
-			return fmt.Errorf("ошибка при получении статуса посылки: %w", err)
-		}
-		return fmt.Errorf("нельзя изменить адрес: статус посылки должен быть %s, текущий статус: %s", ParcelStatusRegistered, status)
-	}
+	fmt.Errorf("parcel not found or not registered: %v", err)
 
 	return nil
 }
@@ -109,9 +93,8 @@ func (s ParcelStore) Delete(number int) error {
 	var status string
 	err := s.db.QueryRow(`
 		DELETE FROM parsel 
-		WHERE number = ? AND status = ? 
-		RETURNING status
-	`, number, ParcelStatusRegistered).Scan(&status)
+		WHERE number = ? AND status = ?
+		`, number, ParcelStatusRegistered).Scan(&status)
 
 	if err != nil {
 		return fmt.Errorf("не удалось удалить посылку с номером %d: %w", number, err)

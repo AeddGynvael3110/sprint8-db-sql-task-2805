@@ -20,7 +20,7 @@ var (
 func getTestParcel() Parcel {
 	return Parcel{
 		Client:    1000,
-		Status:    "registered",
+		Status:    ParcelStatusRegistered,
 		Address:   "test",
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -49,6 +49,7 @@ func setupDB(t *testing.T) *sql.DB {
 func TestAddGetDelete(t *testing.T) {
 	// Подготовка
 	db := setupDB(t)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -60,11 +61,8 @@ func TestAddGetDelete(t *testing.T) {
 	// Получение
 	retrievedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, retrievedParcel.Client)
-	require.Equal(t, parcel.Status, retrievedParcel.Status)
-	require.Equal(t, parcel.Address, retrievedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, retrievedParcel.CreatedAt)
-
+	parcel.Number = id
+	assert.Equal(t, parcel, retrievedParcel)
 	// Удаление
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -78,6 +76,7 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// Подготовка
 	db := setupDB(t)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -101,6 +100,7 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// Подготовка
 	db := setupDB(t)
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -124,6 +124,7 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// Подготовка
 	db := setupDB(t)
+	defer db.Close()
 	store := NewParcelStore(db)
 
 	parcels := []Parcel{
