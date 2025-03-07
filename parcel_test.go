@@ -32,7 +32,7 @@ func setupDB(t *testing.T) *sql.DB {
 	assert.NoError(t, err)
 
 	_, err = db.Exec(`
-    CREATE TABLE parsel (
+    CREATE TABLE parcel (
         number INTEGER PRIMARY KEY AUTOINCREMENT,
         client INTEGER NOT NULL,
         status TEXT NOT NULL,
@@ -65,7 +65,7 @@ func TestAddGetDelete(t *testing.T) {
 	assert.Equal(t, parcel, retrievedParcel)
 	// Удаление
 	err = store.Delete(id)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// Проверка, что посылка удалена
 	_, err = store.Get(id)

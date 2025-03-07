@@ -15,7 +15,7 @@ func NewParcelStore(db *sql.DB) ParcelStore {
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
 	res, err := s.db.Exec(
-		"INSERT INTO parsel (client, status, address, created_at) VALUES (?, ?, ?, ?)",
+		"INSERT INTO parcel (client, status, address, created_at) VALUES (?, ?, ?, ?)",
 		p.Client, p.Status, p.Address, p.CreatedAt,
 	)
 	if err != nil {
@@ -33,7 +33,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
 
-	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parsel WHERE number = ?", number)
+	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = ?", number)
 	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
 		return Parcel{}, err
@@ -42,7 +42,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
-	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parsel WHERE client = ?", client)
+	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = ?", client)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 }
 
 func (s ParcelStore) SetStatus(number int, status string) error {
-	query := "UPDATE parsel SET status = ? WHERE number = ?"
+	query := "UPDATE parcel SET status = ? WHERE number = ?"
 	_, err := s.db.Exec(query, status, number)
 	if err != nil {
 		return err
@@ -76,28 +76,40 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// Обновляем адрес только если статус равен ParcelStatusRegistered
-	query := "UPDATE parsel SET address = ? WHERE number = ? AND status = ?"
-	_, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
+	query := "UPDATE parcel SET address = ? WHERE number = ? AND status = ?"
+	res, err := s.db.Exec(query, address, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("ошибка при обновлении адреса: %w", err)
 	}
 
 	// Проверяем, была ли обновлена хотя бы одна строка
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("ошибка при проверке количества обновленных строк: %w", err)
+	}
 
-	fmt.Errorf("parcel not found or not registered: %v", err)
+	if rowsAffected == 0 {
+		return fmt.Errorf("посылка не найдена или её статус не позволяет обновить адрес")
+	}
 
 	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
-	var status string
-	err := s.db.QueryRow(`
-		DELETE FROM parsel 
-		WHERE number = ? AND status = ?
-		`, number, ParcelStatusRegistered).Scan(&status)
-
+	query := "DELETE FROM parcel WHERE number = ? AND status = ?"
+	res, err := s.db.Exec(query, number, ParcelStatusRegistered)
 	if err != nil {
 		return fmt.Errorf("не удалось удалить посылку с номером %d: %w", number, err)
+	}
+
+	// Проверяем, была ли удалена хотя бы одна строка
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("ошибка при проверке количества удаленных строк: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("посылка не найдена или её статус не позволяет удалить")
 	}
 
 	return nil
