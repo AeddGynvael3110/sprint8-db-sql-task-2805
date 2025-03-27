@@ -2,7 +2,10 @@ package main
 
 import (
 	"database/sql"
+	_ "database/sql"
 	"fmt"
+	"github.com/Yandex-Practicum/go-db-sql-final/.vscode"
+	"log"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -23,10 +26,10 @@ type Parcel struct {
 }
 
 type ParcelService struct {
-	store ParcelStore
+	store _vscode.ParcelStore
 }
 
-func NewParcelService(store ParcelStore) ParcelService {
+func NewParcelService(store _vscode.ParcelStore) ParcelService {
 	return ParcelService{store: store}
 }
 
@@ -98,8 +101,20 @@ func (s ParcelService) Delete(number int) error {
 
 func main() {
 	// настройте подключение к БД
+	db, err := sql.Open("sqlite", "tracker.db")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+	}(db)
 
-	store := // создайте объект ParcelStore функцией NewParcelStore
+	store := _vscode.NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
 
 	// регистрация посылки
@@ -150,10 +165,6 @@ func main() {
 
 	// регистрация новой посылки
 	p, err = service.Register(client, address)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 
 	// удаление новой посылки
 	err = service.Delete(p.Number)
