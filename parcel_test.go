@@ -42,9 +42,9 @@ func TestAddGetDelete(t *testing.T) {
 
     fetched, err := store.Get(id)
     require.NoError(t, err)
-    require.Equal(t, parcel.Client, fetched.Client)
-    require.Equal(t, parcel.Status, fetched.Status)
-    require.Equal(t, parcel.Address, fetched.Address)
+
+    parcel.Number = id
+    require.Equal(t, parcel, fetched)
 
     err = store.Delete(id)
     require.NoError(t, err)
@@ -116,8 +116,6 @@ func TestGetByClient(t *testing.T) {
     for _, p := range stored {
         original, ok := m[p.Number]
         require.True(t, ok)
-        require.Equal(t, original.Client, p.Client)
-        require.Equal(t, original.Status, p.Status)
-        require.Equal(t, original.Address, p.Address)
+        require.Equal(t, original, p)
     }
 }
