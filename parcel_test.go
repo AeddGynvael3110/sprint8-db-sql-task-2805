@@ -57,11 +57,11 @@ func TestAddGetDelete(t *testing.T) {
 
 	require.NoError(t, err)
 
-	assert.Equal(t, parcel.Number, got.Number)
-	assert.Equal(t, parcel.Client, got.Client)
-	assert.Equal(t, parcel.Status, got.Status)
-	assert.Equal(t, parcel.Address, got.Address)
-	assert.Equal(t, parcel.CreatedAt, got.CreatedAt)
+	assert.Equal(t, parcel, got)
+	assert.Equal(t, parcel, got)
+	assert.Equal(t, parcel, got)
+	assert.Equal(t, parcel, got)
+	assert.Equal(t, parcel, got)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -88,18 +88,10 @@ func TestSetAddress(t *testing.T) {
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
+	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
-	res, err := db.Exec("INSERT INTO parcel ( client, status, address, created_at) VALUES(?, ?, ?, ?)",
-		parcel.Client,
-		parcel.Status,
-		parcel.Address,
-		parcel.CreatedAt)
-	if err != nil {
-		return
-	}
-
-	id, err := res.LastInsertId()
+	id, err := store.Add(parcel)
 	parcel.Number = int(id)
 	require.NoError(t, err)
 	require.NotZero(t, id)
@@ -109,22 +101,14 @@ func TestSetAddress(t *testing.T) {
 
 	newAddress := "new test address"
 
-	_, err = db.Exec("UPDATE parcel SET address = ? WHERE number = ?", newAddress, parcel.Number)
-	if err != nil {
-		return
-	}
-
+	err = store.SetAddress(id, newAddress)
+	require.NoError(t, err)
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 
-	row := db.QueryRow("SELECT address FROM parcel WHERE number = ?", parcel.Number)
-
-	var getAddress string
-	err = row.Scan(&getAddress)
-	if err != nil {
-		return
-	}
-	require.Equal(t, newAddress, getAddress)
+	got, err := store.Get(id)
+	require.NoError(t, err)
+	assert.Equal(t, newAddress, got.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -140,18 +124,10 @@ func TestSetStatus(t *testing.T) {
 	// add
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
+	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
-	res, err := db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES( ?, ?, ?, ?)",
-		parcel.Client,
-		parcel.Status,
-		parcel.Address,
-		parcel.CreatedAt)
-	if err != nil {
-		return
-	}
-
-	id, err := res.LastInsertId()
+	id, err := store.Add(parcel)
 	parcel.Number = int(id)
 	require.NoError(t, err)
 	require.NotZero(t, id)
@@ -160,22 +136,16 @@ func TestSetStatus(t *testing.T) {
 	// обновите статус, убедитесь в отсутствии ошибки
 
 	newStatus := ParcelStatusDelivered
-	_, err = db.Exec("UPDATE parcel SET status = ? WHERE number = ?", newStatus, parcel.Number)
-	if err != nil {
-		return
-	}
+
+	err = store.SetStatus(id, newStatus)
+	require.NoError(t, err)
 
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 
-	row := db.QueryRow("SELECT status FROM parcel WHERE number = ?", parcel.Number)
-
-	var getStatus string
-	err = row.Scan(&getStatus)
-	if err != nil {
-		return
-	}
-	require.Equal(t, newStatus, getStatus)
+	got, err := store.Get(id)
+	require.NoError(t, err)
+	assert.Equal(t, newStatus, got.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
