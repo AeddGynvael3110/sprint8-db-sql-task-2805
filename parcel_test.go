@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
@@ -44,6 +45,7 @@ func TestAddGetDelete(t *testing.T) {
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
 	id, err := store.Add(parcel)
+	parcel.Number = id
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
@@ -55,10 +57,11 @@ func TestAddGetDelete(t *testing.T) {
 
 	require.NoError(t, err)
 
-	require.Equal(t, parcel.Client, got.Client)
-	require.Equal(t, parcel.Status, got.Status)
-	require.Equal(t, parcel.Address, got.Address)
-	require.Equal(t, parcel.CreatedAt, got.CreatedAt)
+	assert.Equal(t, parcel.Number, got.Number)
+	assert.Equal(t, parcel.Client, got.Client)
+	assert.Equal(t, parcel.Status, got.Status)
+	assert.Equal(t, parcel.Address, got.Address)
+	assert.Equal(t, parcel.CreatedAt, got.CreatedAt)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -97,6 +100,7 @@ func TestSetAddress(t *testing.T) {
 	}
 
 	id, err := res.LastInsertId()
+	parcel.Number = int(id)
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
@@ -148,6 +152,7 @@ func TestSetStatus(t *testing.T) {
 	}
 
 	id, err := res.LastInsertId()
+	parcel.Number = int(id)
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
@@ -177,10 +182,7 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		return
-	}
-
+	require.NoError(t, err)
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -214,7 +216,7 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Len(t, storedParcels, len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	defer db.Close() // получите список посылок по идентификатору клиента, сохранённого в переменной client
 	// убедитесь в отсутствии ошибки
@@ -222,12 +224,12 @@ func TestGetByClient(t *testing.T) {
 	// check
 	for _, parcel := range storedParcels {
 		expected, ok := parcelMap[parcel.Number]
-		require.True(t, ok)
+		assert.True(t, ok)
 
-		require.Equal(t, expected.Client, parcel.Client)
-		require.Equal(t, expected.Status, parcel.Status)
-		require.Equal(t, expected.Address, parcel.Address)
-		require.Equal(t, expected.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, expected.Client, parcel.Client)
+		assert.Equal(t, expected.Status, parcel.Status)
+		assert.Equal(t, expected.Address, parcel.Address)
+		assert.Equal(t, expected.CreatedAt, parcel.CreatedAt)
 
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap

@@ -83,33 +83,16 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	var currentStatus string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&currentStatus)
-	if err != nil {
-		return err
-	}
 
-	if currentStatus != "registered" {
-		return err
-	}
-
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = ?", address, number)
+	_, err := s.db.Exec("UPDATE parcel SET address = ? WHERE number = ? AND status = 'registered'", address, number)
 	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	var currentStatus string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&currentStatus)
-	if err != nil {
-		return err
-	}
 
-	if currentStatus != "registered" {
-		return err
-	}
-
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = ?", number)
+	_, err := s.db.Exec("DELETE FROM parcel WHERE number = ? AND status = 'registered'", number)
 	return err
+
 }
