@@ -58,10 +58,6 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, parcel, got)
-	assert.Equal(t, parcel, got)
-	assert.Equal(t, parcel, got)
-	assert.Equal(t, parcel, got)
-	assert.Equal(t, parcel, got)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -72,16 +68,14 @@ func TestAddGetDelete(t *testing.T) {
 
 	_, err = store.Get(id)
 	require.Error(t, err)
-	require.Equal(t, sql.ErrNoRows, err)
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 // TestSetAddress проверяет обновление адреса
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		return
-	}
+	require.NoError(t, err)
 
 	defer db.Close()
 
@@ -115,9 +109,7 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		return
-	}
+	require.NoError(t, err)
 
 	defer db.Close()
 
@@ -196,10 +188,7 @@ func TestGetByClient(t *testing.T) {
 		expected, ok := parcelMap[parcel.Number]
 		assert.True(t, ok)
 
-		assert.Equal(t, expected.Client, parcel.Client)
-		assert.Equal(t, expected.Status, parcel.Status)
-		assert.Equal(t, expected.Address, parcel.Address)
-		assert.Equal(t, expected.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, expected, parcel)
 
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
