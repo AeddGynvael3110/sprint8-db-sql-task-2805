@@ -118,12 +118,11 @@ func (s ParcelStore) Delete(number int) error {
 		return err
 	}
 
-	if status != ParcelStatusRegistered {
-		return errors.New("you can't delete this order")
+	if status == ParcelStatusRegistered {
+		_, err = s.db.Exec("DELETE FROM parcel WHERE number = :number",
+			sql.Named("number", number))
 	}
 
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = :number",
-		sql.Named("number", number))
 
 	return err
 }
