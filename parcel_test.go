@@ -51,9 +51,8 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	assert.Equal(t, parcel.Client, gotParcel.Client)
-	assert.Equal(t, parcel.Status, gotParcel.Status)
-	assert.Equal(t, parcel.Address, gotParcel.Address)
+	parcel.Number = gotParcel.Number
+	assert.Equal(t, parcel, gotParcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -179,8 +178,10 @@ func TestGetByClient(t *testing.T) {
 		expected, ok := parcelMap[parcel.Number] // получаем оригинальные данные по ID
 		require.True(t, ok, "неожиданный ID: %d", parcel.Number)
 
-		assert.Equal(t, expected.Client, parcel.Client)
-		assert.Equal(t, expected.Status, parcel.Status)
-		assert.Equal(t, expected.Address, parcel.Address)
+		// assert.Equal(t, expected.Client, parcel.Client)
+		// assert.Equal(t, expected.Status, parcel.Status)
+		// assert.Equal(t, expected.Address, parcel.Address)
+		expected.Number = parcel.Number
+		assert.Equal(t, expected, parcel)
 	}
 }

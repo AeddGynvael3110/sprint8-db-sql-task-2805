@@ -101,58 +101,37 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	var status string
 
-	row := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number",
-		sql.Named("number", number))
-
-	err := row.Scan(&status)
-	if err != nil {
-		fmt.Println("Ошибка при получении статуса:", err)
-		return nil
-	}
-
-	if status != "registered" {
-		fmt.Println("Изменение адреса невозможно: посылка уже отправлена")
-		return nil
-	}
-
-	_, err = s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
+	res, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = 'registered'",
 		sql.Named("address", address),
 		sql.Named("number", number))
 
 	if err != nil {
 		fmt.Println("Ошибка при обновлении:", err)
+		return err
 	}
 
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		fmt.Println("Изменение адреса невозможно: посылка уже отправлена или не найдена")
+	}
 	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	var status string
 
-	row := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number",
-		sql.Named("number", number))
-
-	err := row.Scan(&status)
-	if err != nil {
-		fmt.Println("Ошибка при получении статуса:", err)
-		return nil
-	}
-
-	if status != "registered" {
-		fmt.Println("Удаление невозможно: посылка уже отправлена")
-		return nil
-	}
-
-	_, err = s.db.Exec(
-		"DELETE FROM parcel WHERE number = :number",
+	res, err := s.db.Exec(
+		"DELETE FROM parcel WHERE number = :number AND status = 'registered'",
 		sql.Named("number", number))
 
 	if err != nil {
 		fmt.Println("Ошибка при удалении:", err)
+	}
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		fmt.Println("Удаление невозможно: посылка уже отправлена")
 	}
 
 	return nil
