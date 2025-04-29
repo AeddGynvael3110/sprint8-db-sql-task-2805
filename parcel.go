@@ -38,11 +38,11 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	// чтение строки по заданному number
-	row := s.db.QueryRow("SELECT client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
+	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
 
 	// заполняем объект Parcel данными из таблицы
 	p := Parcel{}
-	err := row.Scan(&p.Client, &p.Status, &p.Address, p.CreatedAt)
+	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 
 	return p, err
 }
@@ -68,6 +68,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		if err != nil {
 			return res, err
 		}
+		res = append(res, parcel)
 
 	}
 
@@ -87,6 +88,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	// обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
 	_, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = :status",
+		sql.Named("address", address),
 		sql.Named("status", ParcelStatusRegistered),
 		sql.Named("number", number))
 
