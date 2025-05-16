@@ -33,9 +33,9 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -55,10 +55,9 @@ func TestAddGetDelete(t *testing.T) {
 
 	require.NoError(t, err)
 
-	assert.Equal(t, parcel.Client, testParcel.Client)
-	assert.Equal(t, parcel.Status, testParcel.Status)
-	assert.Equal(t, parcel.Address, testParcel.Address)
-	assert.Equal(t, parcel.CreatedAt, testParcel.CreatedAt)
+	parcel.Number = parcelId
+
+	assert.Equal(t, parcel, testParcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -76,9 +75,9 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -112,9 +111,9 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -142,9 +141,9 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -191,10 +190,7 @@ func TestGetByClient(t *testing.T) {
 		expected, ok := parcelMap[parcel.Number]
 		assert.True(t, ok, "посылка не найдена в карте по номеру")
 
-		assert.Equal(t, expected.Client, parcel.Client)
-		assert.Equal(t, expected.Status, parcel.Status)
-		assert.Equal(t, expected.Address, parcel.Address)
-		assert.Equal(t, expected.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, expected, parcel)
 
 	}
 }
