@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,37 +33,42 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
-	p, err := store.Get(id)
+	require.Greater(t, id, 0)
+	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Status, p.Status)
-	require.Equal(t, parcel.Address, p.Address)
-	require.Equal(t, parcel.Client, p.Client)
-	require.Equal(t, parcel.CreatedAt, p.CreatedAt)
-	p, err = store.Get(id)
+	require.Equal(t, id, storedParcel.Number)
+	require.Equal(t, parcel.Client, storedParcel.Client)
+	require.Equal(t, parcel.Status, storedParcel.Status)
+	require.Equal(t, parcel.Address, storedParcel.Address)
+	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	_, err = store.Get(id)
 	require.NoError(t, err)
+	err = store.Delete(id)
+	require.NoError(t, err)
+	_, err = store.Get(id)
+	require.Error(t, err)
 }
 
 // TestSetAddress проверяет обновление адреса
 func TestSetAddress(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
+	require.Greater(t, id, 0)
 	newAddress := "new test address"
 	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
@@ -74,15 +80,15 @@ func TestSetAddress(t *testing.T) {
 // TestSetStatus проверяет обновление статуса
 func TestSetStatus(t *testing.T) {
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
+	require.Greater(t, id, 0)
 	err = store.SetStatus(id, ParcelStatusSent)
 	require.NoError(t, err)
 	p, err := store.Get(id)
@@ -94,9 +100,9 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 
 	db, err := sql.Open("sqlite", "tracker.db")
-	if err != nil {
-		require.NoError(t, err)
-	}
+
+	require.NoError(t, err)
+
 	defer db.Close()
 	store := NewParcelStore(db)
 	parcels := []Parcel{
@@ -113,17 +119,17 @@ func TestGetByClient(t *testing.T) {
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.Add(parcels[i])
 		require.NoError(t, err)
-		require.NotEmpty(t, id)
+		require.Greater(t, id, 0)
 		parcels[i].Number = id
 		parcelMap[id] = parcels[i]
 	}
 
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Equal(t, len(parcels), len(storedParcels))
+	assert.Len(t, storedParcels, len(parcels))
 	for _, parcel := range storedParcels {
-		id := parcel.Number
-		require.NotNil(t, parcelMap[id])
-		require.Equal(t, parcelMap[id], parcel)
+		expected, ok := parcelMap[parcel.Number]
+		assert.True(t, ok)
+		assert.Equal(t, expected.Client, parcel.Client)
 	}
 }

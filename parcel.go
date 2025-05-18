@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 )
 
 type ParcelStore struct {
@@ -32,22 +33,11 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
-	var (
-		client    int
-		status    string
-		address   string
-		createdAt string
-	)
-	row := s.db.QueryRow("SELECT client, status,address,created_at FROM parcel WHERE number = :number", sql.Named("number", number))
-	err := row.Scan(&client, &status, &address, &createdAt)
+	row := s.db.QueryRow("SELECT number, client, status, address, created_at FROM parcel WHERE number = :number", sql.Named("number", number))
+	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return Parcel{}, err
 	}
-	p.Address = address
-	p.Client = client
-	p.CreatedAt = createdAt
-	p.Number = number
-	p.Status = status
 	return p, nil
 }
 
@@ -70,7 +60,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 
 		res = append(res, p)
 	}
-
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
@@ -81,36 +74,33 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	p, err := s.Get(number)
+	res, err := s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number AND status = 'registered' ",
+		sql.Named("number", number),
+		sql.Named("address", address))
 	if err != nil {
 		return err
 	}
-	if p.Status == ParcelStatusRegistered {
-		_, err = s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
-			sql.Named("number", number),
-			sql.Named("address", address))
-		if err != nil {
-			return err
-		}
+
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("Изменение адреса невозможно: посылка уже отправлена или не найдена")
+
 	}
 	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
-	p, err := s.Get(number)
+	res, err := s.db.Exec("DELETE FROM parcel WHERE number = :number AND status = 'registered'", sql.Named("number", number))
 	if err != nil {
 		return err
 	}
-	if p.Status == ParcelStatusRegistered {
-		_, err = s.db.Exec("DELETE FROM parcel WHERE number = :number", sql.Named("number", number))
-		if err != nil {
-			return err
-		}
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("Удаление невозможно: посылка уже отправлена")
 	}
 	return nil
 }
