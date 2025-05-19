@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>go-db-sql-final: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/Yandex-Practicum/go-db-sql-final/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/Yandex-Practicum/go-db-sql-final/parcel.go (83.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "database/sql"
+        "fmt"
+        "time"
+
+        _ "modernc.org/sqlite"
+)
+
+const (
+        ParcelStatusRegistered = "registered"
+        ParcelStatusSent       = "sent"
+        ParcelStatusDelivered  = "delivered"
+)
+
+type Parcel struct {
+        Number    int
+        Client    int
+        Status    string
+        Address   string
+        CreatedAt string
+}
+
+type ParcelService struct {
+        store ParcelStore
+}
+
+func NewParcelService(store ParcelStore) ParcelService <span class="cov0" title="0">{
+        return ParcelService{store: store}
+}</span>
+
+func (s ParcelService) Register(client int, address string) (Parcel, error) <span class="cov0" title="0">{
+        parcel := Parcel{
+                Client:    client,
+                Status:    ParcelStatusRegistered,
+                Address:   address,
+                CreatedAt: time.Now().UTC().Format(time.RFC3339),
+        }
+
+        id, err := s.store.Add(parcel)
+        if err != nil </span><span class="cov0" title="0">{
+                return parcel, err
+        }</span>
+
+        <span class="cov0" title="0">parcel.Number = id
+
+        fmt.Printf("Новая посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s\n",
+                parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt)
+
+        return parcel, nil</span>
+}
+
+func (s ParcelService) PrintClientParcels(client int) error <span class="cov0" title="0">{
+        parcels, err := s.store.GetByClient(client)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">fmt.Printf("Посылки клиента %d:\n", client)
+        for _, parcel := range parcels </span><span class="cov0" title="0">{
+                fmt.Printf("Посылка № %d на адрес %s от клиента с идентификатором %d зарегистрирована %s, статус %s\n",
+                        parcel.Number, parcel.Address, parcel.Client, parcel.CreatedAt, parcel.Status)
+        }</span>
+        <span class="cov0" title="0">fmt.Println()
+
+        return nil</span>
+}
+
+func (s ParcelService) NextStatus(number int) error <span class="cov0" title="0">{
+        parcel, err := s.store.Get(number)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov0" title="0">var nextStatus string
+        switch parcel.Status </span>{
+        case ParcelStatusRegistered:<span class="cov0" title="0">
+                nextStatus = ParcelStatusSent</span>
+        case ParcelStatusSent:<span class="cov0" title="0">
+                nextStatus = ParcelStatusDelivered</span>
+        case ParcelStatusDelivered:<span class="cov0" title="0">
+                return nil</span>
+        }
+
+        <span class="cov0" title="0">fmt.Printf("У посылки № %d новый статус: %s\n", number, nextStatus)
+
+        return s.store.SetStatus(number, nextStatus)</span>
+}
+
+func (s ParcelService) ChangeAddress(number int, address string) error <span class="cov0" title="0">{
+        return s.store.SetAddress(number, address)
+}</span>
+
+func (s ParcelService) Delete(number int) error <span class="cov0" title="0">{
+        return s.store.Delete(number)
+}</span>
+
+func main() <span class="cov0" title="0">{
+        // настройте подключение к БД
+        db, err := sql.Open("sqlite", "tracker.db")
+
+        store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
+        service := NewParcelService(store)
+
+        // регистрация посылки
+        client := 1
+        address := "Псков, д. Пушкина, ул. Колотушкина, д. 5"
+        p, err := service.Register(client, address)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // изменение адреса
+        <span class="cov0" title="0">newAddress := "Саратов, д. Верхние Зори, ул. Козлова, д. 25"
+        err = service.ChangeAddress(p.Number, newAddress)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // изменение статуса
+        <span class="cov0" title="0">err = service.NextStatus(p.Number)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // вывод посылок клиента
+        <span class="cov0" title="0">err = service.PrintClientParcels(client)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // попытка удаления отправленной посылки
+        <span class="cov0" title="0">err = service.Delete(p.Number)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // вывод посылок клиента
+        // предыдущая посылка не должна удалиться, т.к. её статус НЕ «зарегистрирована»
+        <span class="cov0" title="0">err = service.PrintClientParcels(client)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // регистрация новой посылки
+        <span class="cov0" title="0">p, err = service.Register(client, address)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // удаление новой посылки
+        <span class="cov0" title="0">err = service.Delete(p.Number)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+
+        // вывод посылок клиента
+        // здесь не должно быть последней посылки, т.к. она должна была успешно удалиться
+        <span class="cov0" title="0">err = service.PrintClientParcels(client)
+        if err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                return
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
+
+import (
+        "database/sql"
+)
+
+type ParcelStore struct {
+        db *sql.DB
+}
+
+func NewParcelStore(db *sql.DB) ParcelStore <span class="cov8" title="1">{
+        return ParcelStore{db: db}
+}</span>
+
+func (s ParcelStore) Add(p Parcel) (int, error) <span class="cov8" title="1">{
+        // реализуйте добавление строки в таблицу parcel, используйте данные из переменной p
+        res, err := s.db.Exec("INSERT INTO parcel (client, status, address, created_at) VALUES (:client, :status, :address, :created_at)",
+                sql.Named("client", p.Client),
+                sql.Named("status", p.Status),
+                sql.Named("address", p.Address),
+                sql.Named("created_at", p.CreatedAt))
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+
+        <span class="cov8" title="1">resID, _ := res.LastInsertId()
+        return int(resID), nil</span>
+}
+
+func (s ParcelStore) Get(number int) (Parcel, error) <span class="cov8" title="1">{
+        // реализуйте чтение строки по заданному number
+        // здесь из таблицы должна вернуться только одна строка
+        row := s.db.QueryRow("SELECT client, status, address, created_at FROM parcel WHERE number = :number",
+                sql.Named("number", number))
+
+        // заполните объект Parcel данными из таблицы
+        p := Parcel{}
+        err := row.Scan(&amp;p.Client, &amp;p.Status, &amp;p.Address, &amp;p.CreatedAt)
+        if err != nil </span><span class="cov8" title="1">{
+                return p, err
+        }</span>
+        <span class="cov8" title="1">return p, nil</span>
+}
+
+func (s ParcelStore) GetByClient(client int) ([]Parcel, error) <span class="cov8" title="1">{
+        // реализуйте чтение строк из таблицы parcel по заданному client
+        // здесь из таблицы может вернуться несколько строк
+        rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client",
+                sql.Named("client", client))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        // заполните срез Parcel данными из таблицы
+        <span class="cov8" title="1">var res []Parcel
+        for rows.Next() </span><span class="cov8" title="1">{
+                p := Parcel{}
+                err := rows.Scan(&amp;p.Number, &amp;p.Client, &amp;p.Status, &amp;p.Address, &amp;p.CreatedAt)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">res = append(res, p)</span>
+        }
+        <span class="cov8" title="1">return res, nil</span>
+}
+
+func (s ParcelStore) SetStatus(number int, status string) error <span class="cov8" title="1">{
+        // реализуйте обновление статуса в таблице parcel
+        _, err := s.db.Exec("UPDATE parcel SET status = :status WHERE number = :number",
+                sql.Named("status", status),
+                sql.Named("number", number))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (s ParcelStore) SetAddress(number int, address string) error <span class="cov8" title="1">{
+        // реализуйте обновление адреса в таблице parcel
+        // менять адрес можно только если значение статуса registered
+        row := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number", sql.Named("number", number))
+        var status string
+        err := row.Scan(&amp;status)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if status == ParcelStatusRegistered </span><span class="cov8" title="1">{
+                _, err = s.db.Exec("UPDATE parcel SET address = :address WHERE number = :number",
+                        sql.Named("address", address),
+                        sql.Named("number", number))
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (s ParcelStore) Delete(number int) error <span class="cov8" title="1">{
+        // реализуйте удаление строки из таблицы parcel
+        // удалять строку можно только если значение статуса registered
+        row := s.db.QueryRow("SELECT status FROM parcel WHERE number = :number", sql.Named("number", number))
+
+        var status string
+        err := row.Scan(&amp;status)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov8" title="1">if status == ParcelStatusRegistered </span><span class="cov8" title="1">{
+                _, err = s.db.Exec("DELETE FROM parcel WHERE number = :number", sql.Named("number", number))
+                if err != nil </span><span class="cov0" title="0">{
+                        return err
+                }</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
