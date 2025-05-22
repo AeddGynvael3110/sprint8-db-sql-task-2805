@@ -48,15 +48,10 @@ func TestAddGetDelete(t *testing.T) {
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
-	var number int
-	row := db.QueryRow("SELECT number FROM parcel WHERE number = :number", sql.Named("number", id))
+	p, err := store.Get(id)
 
-	err = row.Scan(&number)
 	require.NoError(t, err)
-
-	p, err := store.Get(number)
-	require.NoError(t, err)
-	assert.Equal(t, number, p.Number)
+	assert.Equal(t, id, p.Number)
 	assert.Equal(t, parcel.Client, p.Client)
 	assert.Equal(t, parcel.Status, p.Status)
 	assert.Equal(t, parcel.Address, p.Address)
@@ -65,10 +60,10 @@ func TestAddGetDelete(t *testing.T) {
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
-	err = store.Delete(number)
+	err = store.Delete(id)
 	require.NoError(t, err)
 
-	_, err = store.Get(number)
+	_, err = store.Get(id)
 	require.Error(t, err)	
 }
 

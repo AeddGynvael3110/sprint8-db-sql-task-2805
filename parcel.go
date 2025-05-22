@@ -103,7 +103,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	}
 	
 	if rowsAffected == 0 {
-		return errors.New("error changing the address now")
+		return errors.New("Ошибка: нельзя изменить адрес отправленной посылки")
 	}
 
 	return nil 
@@ -125,7 +125,7 @@ func (s ParcelStore) Delete(number int) error {
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("error deleting the parcel")
+		return errors.New("Ошибка: нельзя удалить отправленную посылку")
 	}
 
 	return err

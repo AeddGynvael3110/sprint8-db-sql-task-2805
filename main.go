@@ -80,6 +80,7 @@ func (s ParcelService) NextStatus(number int) error {
 	case ParcelStatusSent:
 		nextStatus = ParcelStatusDelivered
 	case ParcelStatusDelivered:
+		fmt.Printf("Parcel # %d has already been delivered\n", number)
 		return nil
 	}
 
@@ -121,7 +122,6 @@ func main() {
 	err = service.ChangeAddress(p.Number, newAddress)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 
 	// изменение статуса
@@ -142,7 +142,6 @@ func main() {
 	err = service.Delete(p.Number)
 	if err != nil {
 		fmt.Println(err)
-		return
 	}
 
 	// вывод посылок клиента
