@@ -41,9 +41,9 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return p, fmt.Errorf("parcel with number %d not found", number)
+			return Parcel{}, sql.ErrNoRows
 		}
-		return p, err
+		return Parcel{}, err
 	}
 	// реализуйте чтение строки по заданному number
 
@@ -92,19 +92,20 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
+
+	res, err := s.db.Exec(
+		"UPDATE parcel SET address = ? WHERE number = ? AND status = ?",
+		address, number, ParcelStatusRegistered,
+	)
 	if err != nil {
 		return err
 	}
-
-	if status != ParcelStatusRegistered {
-		return fmt.Errorf("can`t change address: parcel status %s", status)
-	}
-
-	_, err = s.db.Exec("UPDATE parcel SET address = ? WHERE number = ?", address, number)
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("can't change address: parcel not found or status not 'registered'")
 	}
 
 	return nil
@@ -113,17 +114,20 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	var status string
-	err := s.db.QueryRow("SELECT status FROM parcel WHERE number = ?", number).Scan(&status)
+
+	res, err := s.db.Exec(
+		"DELETE FROM parcel WHERE number = ? AND status = ?",
+		number, ParcelStatusRegistered,
+	)
 	if err != nil {
 		return err
 	}
-	if status != ParcelStatusRegistered {
-		return fmt.Errorf("can`t delete parcel: status %s", status)
-	}
-	_, err = s.db.Exec("DELETE FROM parcel WHERE number = ?", number)
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("can't delete parcel: parcel %d not found or status is not 'registered'", number)
 	}
 
 	return nil
