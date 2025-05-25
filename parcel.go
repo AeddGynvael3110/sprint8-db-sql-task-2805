@@ -11,18 +11,20 @@ type ParcelStore struct {
 
 func NewParcelStore(db *sql.DB) ParcelStore {
 	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS parcel(
-		number INTEGER PRIMARY KEY AUTOINCREMENT,
-		client INTEGER NOT NULL,
-		status TEXT NOT NULL,
-		address TEXT NOT NULL,
-		created_at TEXT NOT NULL
+		number      INTEGER PRIMARY KEY AUTOINCREMENT,
+		client      INTEGER NOT NULL,
+		status      TEXT    NOT NULL,
+		address     TEXT    NOT NULL,
+		created_at  TEXT    NOT NULL
 	)`)
 	return ParcelStore{db: db}
 }
 
 func (s ParcelStore) Add(p Parcel) (int, error) {
-	res, err := s.db.Exec(`INSERT INTO parcel(client,status,address,created_at) VALUES(?,?,?,?)`,
-		p.Client, p.Status, p.Address, p.CreatedAt)
+	res, err := s.db.Exec(
+		`INSERT INTO parcel(client,status,address,created_at) VALUES(?,?,?,?)`,
+		p.Client, p.Status, p.Address, p.CreatedAt,
+	)
 	if err != nil {
 		return 0, err
 	}
@@ -31,14 +33,22 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 }
 
 func (s ParcelStore) Get(number int) (Parcel, error) {
-	row := s.db.QueryRow(`SELECT number,client,status,address,created_at FROM parcel WHERE number=?`, number)
+	row := s.db.QueryRow(
+		`SELECT number,client,status,address,created_at FROM parcel WHERE number=?`,
+		number,
+	)
 	var p Parcel
-	err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
-	return p, err
+	if err := row.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt); err != nil {
+		return p, err
+	}
+	return p, nil
 }
 
 func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
-	rows, err := s.db.Query(`SELECT number,client,status,address,created_at FROM parcel WHERE client=?`, client)
+	rows, err := s.db.Query(
+		`SELECT number,client,status,address,created_at FROM parcel WHERE client=?`,
+		client,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +61,10 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		}
 		res = append(res, p)
 	}
-	return res, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func (s ParcelStore) SetStatus(number int, status string) error {
@@ -59,7 +72,10 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	if err != nil {
 		return err
 	}
-	aff, _ := res.RowsAffected()
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
 	if aff == 0 {
 		return fmt.Errorf("parcel %d not found", number)
 	}
@@ -67,12 +83,17 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
-	res, err := s.db.Exec(`UPDATE parcel SET address=? WHERE number=? AND status=?`,
-		address, number, ParcelStatusRegistered)
+	res, err := s.db.Exec(
+		`UPDATE parcel SET address=? WHERE number=? AND status=?`,
+		address, number, ParcelStatusRegistered,
+	)
 	if err != nil {
 		return err
 	}
-	aff, _ := res.RowsAffected()
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
 	if aff == 0 {
 		return fmt.Errorf("cannot change address")
 	}
@@ -80,12 +101,17 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 }
 
 func (s ParcelStore) Delete(number int) error {
-	res, err := s.db.Exec(`DELETE FROM parcel WHERE number=? AND status=?`,
-		number, ParcelStatusRegistered)
+	res, err := s.db.Exec(
+		`DELETE FROM parcel WHERE number=? AND status=?`,
+		number, ParcelStatusRegistered,
+	)
 	if err != nil {
 		return err
 	}
-	aff, _ := res.RowsAffected()
+	aff, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
 	if aff == 0 {
 		return fmt.Errorf("cannot delete parcel")
 	}

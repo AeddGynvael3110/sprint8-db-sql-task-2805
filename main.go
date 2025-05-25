@@ -96,6 +96,7 @@ func main() {
 	defer db.Close()
 	store := NewParcelStore(db)
 	service := NewParcelService(store)
+
 	client := 1
 	address := "Псков, д. Пушкина, ул. Колотушкина, д. 5"
 	p, err := service.Register(client, address)
@@ -103,35 +104,43 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
 	newAddress := "Саратов, д. Верхние Зори, ул. Козлова, д. 25"
 	if err := service.ChangeAddress(p.Number, newAddress); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	if err := service.NextStatus(p.Number); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	if err := service.PrintClientParcels(client); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	if err := service.Delete(p.Number); err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // ожидаемая ошибка
 	}
+
 	if err := service.PrintClientParcels(client); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	p, err = service.Register(client, address)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	if err := service.Delete(p.Number); err != nil {
 		fmt.Println(err)
 		return
 	}
+
 	if err := service.PrintClientParcels(client); err != nil {
 		fmt.Println(err)
 	}
