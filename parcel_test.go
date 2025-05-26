@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,11 +50,11 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	parc, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Address, parc.Address)
-	require.Equal(t, parcel.Client, parc.Client)
-	require.Equal(t, parcel.CreatedAt, parc.CreatedAt)
-	require.Equal(t, id, parc.Number)
-	require.Equal(t, parcel.Status, parc.Status)
+	assert.Equal(t, parcel.Address, parc.Address)
+	assert.Equal(t, parcel.Client, parc.Client)
+	assert.Equal(t, parcel.CreatedAt, parc.CreatedAt)
+	assert.Equal(t, id, parc.Number)
+	assert.Equal(t, parcel.Status, parc.Status)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -62,7 +63,7 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = store.Get(id)
-	require.Equal(t, err, sql.ErrNoRows)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 
 }
 
@@ -94,7 +95,7 @@ func TestSetAddress(t *testing.T) {
 
 	parc, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parc.Address, newAddress)
+	assert.Equal(t, parc.Address, newAddress)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -111,7 +112,7 @@ func TestSetStatus(t *testing.T) {
 
 	id, err := store.Add(p)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
+	assert.NotEmpty(t, id)
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
@@ -124,7 +125,7 @@ func TestSetStatus(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что статус обновился
 	parc, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddstatus, parc.Status)
+	assert.Equal(t, newAddstatus, parc.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -152,8 +153,8 @@ func TestGetByClient(t *testing.T) {
 	// add
 	for i := 0; i < len(parcels); i++ {
 		id, err := store.Add(parcels[i])
-		require.NoError(t, err)
-		require.NotEmpty(t, id) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
+		assert.NoError(t, err)
+		assert.NotEmpty(t, id) // добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 
 		// обновляем идентификатор добавленной у посылки
 		parcels[i].Number = id
@@ -165,7 +166,7 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Equal(t, storedParcels, parcels)
+	assert.Len(t, storedParcels, len(parcels))
 	// получите список посылок по идентификатору клиента, сохранённого в переменной client
 	// убедитесь в отсутствии ошибки
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
@@ -174,13 +175,13 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		// Проверяем, что посылка есть в parcelMap по идентификатору
 		stored, exists := parcelMap[parcel.Number]
-		require.True(t, exists, "Посылка с номером %d не найдена в parcelMap", parcel.Number)
+		assert.True(t, exists, "Посылка с номером %d не найдена в parcelMap", parcel.Number)
 
-		require.Equal(t, stored.Client, parcel.Client, "does not match Client")
-		require.Equal(t, stored.Status, parcel.Status, "does not match Status")
-		require.Equal(t, stored.Address, parcel.Address, "does not match Address")
-		require.Equal(t, stored.CreatedAt, parcel.CreatedAt, "does not match CreatedAt")
-		require.Equal(t, stored.Number, parcel.Number, "does not match Number")
+		assert.Equal(t, stored.Client, parcel.Client, "does not match Client")
+		assert.Equal(t, stored.Status, parcel.Status, "does not match Status")
+		assert.Equal(t, stored.Address, parcel.Address, "does not match Address")
+		assert.Equal(t, stored.CreatedAt, parcel.CreatedAt, "does not match CreatedAt")
+		assert.Equal(t, stored.Number, parcel.Number, "does not match Number")
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно

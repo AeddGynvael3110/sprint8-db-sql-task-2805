@@ -52,21 +52,24 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	var res []Parcel
 	// реализуйте чтение строк из таблицы parcel по заданному client
 	// здесь из таблицы может вернуться несколько строк
-	row, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client", sql.Named("client", client))
+	rows, err := s.db.Query("SELECT number, client, status, address, created_at FROM parcel WHERE client = :client", sql.Named("client", client))
 	if err != nil {
 		return nil, err
 	}
-	defer row.Close()
+	defer rows.Close()
 	// заполните срез Parcel данными из таблицы
 
-	for row.Next() {
+	for rows.Next() {
 		r := Parcel{}
 
-		err := row.Scan(&r.Number, &r.Client, &r.Status, &r.Address, &r.CreatedAt)
+		err := rows.Scan(&r.Number, &r.Client, &r.Status, &r.Address, &r.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
 		res = append(res, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return res, nil
