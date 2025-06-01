@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
@@ -50,11 +51,12 @@ func TestAddGetDelete(t *testing.T) {
 
 	// get
 	retrievedParcel, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, parcel.Client, retrievedParcel.Client)
-	require.Equal(t, parcel.Status, retrievedParcel.Status)
-	require.Equal(t, parcel.Address, retrievedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, retrievedParcel.CreatedAt)
+	assert.NoError(t, err)
+	assert.Equal(t, parcel.Client, retrievedParcel.Client)
+	assert.Equal(t, parcel.Status, retrievedParcel.Status)
+	assert.Equal(t, parcel.Address, retrievedParcel.Address)
+	assert.Equal(t, parcel.CreatedAt, retrievedParcel.CreatedAt)
+	assert.Equal(t, id, retrievedParcel.Number)
 
 	// delete
 	err = store.Delete(id)
@@ -90,8 +92,8 @@ func TestSetAddress(t *testing.T) {
 
 	// check
 	retrievedParcel, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, newAddress, retrievedParcel.Address)
+	assert.NoError(t, err)
+	assert.Equal(t, newAddress, retrievedParcel.Address)
 }
 
 // TestSetStatus проверяет обновление статуса
@@ -119,8 +121,8 @@ func TestSetStatus(t *testing.T) {
 
 	// check
 	retrievedParcel, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, newStatus, retrievedParcel.Status)
+	assert.NoError(t, err)
+	assert.Equal(t, newStatus, retrievedParcel.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -157,15 +159,15 @@ func TestGetByClient(t *testing.T) {
 
 	// get by client
 	storedParcels, err := store.GetByClient(client)
-	require.NoError(t, err)
-	require.Equal(t, len(parcels), len(storedParcels))
+	assert.NoError(t, err)
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
-		require.Contains(t, parcelMap, parcel.Number)
-		require.Equal(t, parcelMap[parcel.Number].Client, parcel.Client)
-		require.Equal(t, parcelMap[parcel.Number].Status, parcel.Status)
-		require.Equal(t, parcelMap[parcel.Number].Address, parcel.Address)
-		require.Equal(t, parcelMap[parcel.Number].CreatedAt, parcel.CreatedAt)
+		assert.Contains(t, parcelMap, parcel.Number)
+		assert.Equal(t, parcelMap[parcel.Number], parcel)
+		assert.Equal(t, parcelMap[parcel.Number].Status, parcel.Status)
+		assert.Equal(t, parcelMap[parcel.Number].Address, parcel.Address)
+		assert.Equal(t, parcelMap[parcel.Number].CreatedAt, parcel.CreatedAt)
 	}
 }
